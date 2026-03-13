@@ -1,0 +1,40 @@
+name: ita
+
+services:
+  uporabniki:
+    build:
+      context: ./uporabniki
+      dockerfile: Dockerfile
+    container_name: ita-uporabniki
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      SQLITE_PATH: /app/data/users.sqlite
+      PORT: 3000
+    volumes:
+      - uporabniki_data:/app/data
+    networks:
+      - ita_net
+
+  # Future service template:
+  # parkirisca:
+  #   build:
+  #     context: ./parkirisca
+  #     dockerfile: Dockerfile
+  #   container_name: ita-parkirisca
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     PORT: 3000
+  #   networks:
+  #     - ita_net
+
+volumes:
+  uporabniki_data:
+
+networks:
+  ita_net:
+    driver: bridge

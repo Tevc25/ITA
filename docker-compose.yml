@@ -17,23 +17,25 @@ services:
       - uporabniki_data:/app/data
     networks:
       - ita_net
-
-  # Future service template:
-  # parkirisca:
-  #   build:
-  #     context: ./parkirisca
-  #     dockerfile: Dockerfile
-  #   container_name: ita-parkirisca
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3001:3000"
-  #   environment:
-  #     PORT: 3000
-  #   networks:
-  #     - ita_net
+  parkirisca:
+    build:
+      context: ./parkirisca
+      dockerfile: Dockerfile
+    container_name: ita-parkirisca
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    environment:
+      GRPC_PORT: 50051
+      DB_PATH: /app/data/parkirisca.db
+    volumes:
+      - parkirisca_data:/app/data
+    networks:
+      - ita_net
 
 volumes:
   uporabniki_data:
+  parkirisca_data:
 
 networks:
   ita_net:

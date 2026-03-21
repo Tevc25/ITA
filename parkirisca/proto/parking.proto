@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package parking;
+
+option go_package = "parkirisca/proto/gen/parking";
+
+service ParkingService {
+  rpc ListParkingLots (Empty) returns (ParkingLotListResponse);
+  rpc GetParkingLotById (ParkingLotByIdRequest) returns (ParkingLotResponse);
+  rpc CreateParkingLot (CreateParkingLotRequest) returns (ParkingLotResponse);
+  rpc UpdateAvailability (UpdateAvailabilityRequest) returns (ParkingLotResponse);
+  rpc DeleteParkingLot (ParkingLotByIdRequest) returns (DeleteResponse);
+}
+
+message Empty {}
+
+message ParkingLot {
+  string id = 1;
+  string name = 2;
+  string location = 3;
+  int32 capacity = 4;
+  int32 available_spots = 5;
+}
+
+message ParkingLotByIdRequest {
+  string id = 1;
+}
+
+message CreateParkingLotRequest {
+  string name = 1;
+  string location = 2;
+  int32 capacity = 3;
+  int32 available_spots = 4;
+}
+
+message UpdateAvailabilityRequest {
+  string id = 1;
+  int32 available_spots = 2;
+}
+
+message ParkingLotResponse {
+  ParkingLot parking_lot = 1;
+}
+
+message ParkingLotListResponse {
+  repeated ParkingLot parking_lots = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}

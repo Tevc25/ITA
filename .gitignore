@@ -1,1 +1,6 @@
 .DS_Store
+
+parkirisca/.env
+parkirisca/data/*.db
+uporabniki/data/*.sqlite-shm
+uporabniki/data/*.sqlite-wal

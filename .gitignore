@@ -9,3 +9,7 @@ rezervacije-parkiranja/.pytest_cache/
 rezervacije-parkiranja/**/__pycache__/
 rezervacije-parkiranja/data/*.db
 rezervacije-parkiranja/.env
+gateway-web/.venv/
+gateway-web/.pytest_cache/
+gateway-web/**/__pycache__/
+gateway-web/.env

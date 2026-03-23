@@ -7,7 +7,7 @@ Sistem je zasnovan po načelih **Clean Architecture** (poslovna logika je neodvi
 
 ---
 
-## Arhitektura sistema (3 mikrostoritve + spletni UI)
+## Arhitektura sistema (3 mikrostoritve + 2 API prehoda + spletni UI)
 
 ### Mikrostoritve
 1. **Storitev uporabniki**
@@ -32,10 +32,22 @@ Sistem je zasnovan po načelih **Clean Architecture** (poslovna logika je neodvi
 - rezervacija parkirnega mesta
 - moje rezervacije
 
+### API prehoda (API Gateway)
+1. **gateway-web** (Python/FastAPI)
+   - enotna vstopna točka za spletni odjemalec
+   - endpointi pod `/api/web/...`
+   - OpenAPI/Swagger na `/docs`
+
+2. **gateway-mobile** (Go)
+   - enotna vstopna točka za mobilni odjemalec
+   - endpointi pod `/api/mobile/...`
+   - vključuje agregiran endpoint `/api/mobile/dashboard/{userId}`
+
 ---
 
 ## Komunikacija med komponentami
-- Spletni vmesnik komunicira z mikrostoritvami preko **REST API (HTTP)**.
+- Odjemalci komunicirajo preko **API prehodov (REST/HTTP)**.
+- `gateway-web` in `gateway-mobile` posredujeta zahtevke do mikrostoritev (`uporabniki`, `parkirisca`, `rezervacije-parkiranja`).
 - Storitev rezervacij lahko po potrebi preveri stanje parkirišča pri storitvi parkirišč (npr. pri ustvarjanju rezervacije).
 
 Primer poteka:
@@ -76,6 +88,9 @@ sistem-za-parkirisca/
 │   ├── aplikacija/             # use-casei: create/cancel reservation, list reservations ...
 │   ├── infrastruktura/         # baza, repo, integracije do drugih storitev ...
 │   └── api/                    # REST endpointi ...
+│
+├── gateway-web/                # API Gateway za web odjemalec (Python/FastAPI)
+├── gateway-mobile/             # API Gateway za mobile odjemalec (Go)
 │
 ├── spletni-vmesnik/
 │   ├── src/                    # UI logika in komponente

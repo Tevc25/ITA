@@ -75,6 +75,48 @@ services:
     networks:
       - ita_net
 
+  gateway-web:
+    build:
+      context: ./gateway-web
+      dockerfile: Dockerfile
+    container_name: ita-gateway-web
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      APP_NAME: gateway-web
+      PORT: 8090
+      UPORABNIKI_BASE_URL: http://uporabniki:3000
+      PARKIRISCA_BASE_URL: http://parkirisca:8080
+      REZERVACIJE_BASE_URL: http://rezervacije-parkiranja:8000
+    depends_on:
+      - uporabniki
+      - parkirisca
+      - rezervacije-parkiranja
+    networks:
+      - ita_net
+
+  gateway-mobile:
+    build:
+      context: ./gateway-mobile
+      dockerfile: Dockerfile
+    container_name: ita-gateway-mobile
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+    environment:
+      APP_NAME: gateway-mobile
+      PORT: 8091
+      UPORABNIKI_BASE_URL: http://uporabniki:3000
+      PARKIRISCA_BASE_URL: http://parkirisca:8080
+      REZERVACIJE_BASE_URL: http://rezervacije-parkiranja:8000
+    depends_on:
+      - uporabniki
+      - parkirisca
+      - rezervacije-parkiranja
+    networks:
+      - ita_net
+
 volumes:
   uporabniki_data:
   parkirisca_data:

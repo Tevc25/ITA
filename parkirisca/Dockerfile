@@ -14,5 +14,6 @@ WORKDIR /app
 COPY --from=builder /app/parkirisca /app/parkirisca
 
 EXPOSE 50051
+EXPOSE 8080
 
 CMD ["/app/parkirisca"]

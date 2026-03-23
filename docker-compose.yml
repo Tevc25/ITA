@@ -1,6 +1,20 @@
 name: ita
 
 services:
+  activemq:
+    image: rmohr/activemq:5.15.9
+    container_name: ita-activemq
+    restart: unless-stopped
+    ports:
+      - "61613:61613"
+      - "61616:61616"
+      - "8161:8161"
+    environment:
+      ACTIVEMQ_ADMIN_LOGIN: ${ACTIVEMQ_ADMIN_LOGIN:-admin}
+      ACTIVEMQ_ADMIN_PASSWORD: ${ACTIVEMQ_ADMIN_PASSWORD:-admin}
+    networks:
+      - ita_net
+
   uporabniki:
     build:
       context: ./uporabniki
@@ -25,17 +39,46 @@ services:
     restart: unless-stopped
     ports:
       - "50051:50051"
+      - "8080:8080"
     environment:
       GRPC_PORT: 50051
+      HTTP_PORT: 8080
       DB_PATH: /app/data/parkirisca.db
     volumes:
       - parkirisca_data:/app/data
     networks:
       - ita_net
 
+  rezervacije-parkiranja:
+    build:
+      context: ./rezervacije-parkiranja
+      dockerfile: Dockerfile
+    container_name: ita-rezervacije-parkiranja
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: rezervacije-parkiranja
+      PORT: 8000
+      DATABASE_URL: sqlite+aiosqlite:////app/data/reservations.db
+      BROKER_ENABLED: "true"
+      BROKER_REQUIRED: "true"
+      ACTIVEMQ_HOST: activemq
+      ACTIVEMQ_PORT: 61613
+      ACTIVEMQ_USER: ${ACTIVEMQ_ADMIN_LOGIN:-admin}
+      ACTIVEMQ_PASSWORD: ${ACTIVEMQ_ADMIN_PASSWORD:-admin}
+      ACTIVEMQ_DESTINATION: /topic/reservations.events
+    depends_on:
+      - activemq
+    volumes:
+      - rezervacije_data:/app/data
+    networks:
+      - ita_net
+
 volumes:
   uporabniki_data:
   parkirisca_data:
+  rezervacije_data:
 
 networks:
   ita_net:

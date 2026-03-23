@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -18,6 +21,7 @@ import (
 	infralogger "parkirisca/internal/infrastructure/logger"
 	"parkirisca/internal/infrastructure/repository"
 	grpciface "parkirisca/internal/interfaces/grpc"
+	httpiface "parkirisca/internal/interfaces/http"
 	pb "parkirisca/proto/gen/parking"
 )
 
@@ -49,10 +53,10 @@ func run(cfg config.Config, logger *slog.Logger) error {
 	service := appservice.NewParkingService(repo, logger)
 	handler := grpciface.NewHandler(service)
 
-	address := ":" + cfg.GRPCPort
-	listener, err := net.Listen("tcp", address)
+	grpcAddress := ":" + cfg.GRPCPort
+	listener, err := net.Listen("tcp", grpcAddress)
 	if err != nil {
-		return fmt.Errorf("listen on %s: %w", address, err)
+		return fmt.Errorf("listen on %s: %w", grpcAddress, err)
 	}
 	defer listener.Close()
 
@@ -60,21 +64,41 @@ func run(cfg config.Config, logger *slog.Logger) error {
 	pb.RegisterParkingServiceServer(grpcServer, handler)
 	reflection.Register(grpcServer)
 
-	serverErr := make(chan error, 1)
+	httpAdapter := httpiface.NewHandler(service)
+	httpMux := http.NewServeMux()
+	httpAdapter.RegisterRoutes(httpMux)
+	httpServer := &http.Server{
+		Addr:    ":" + cfg.HTTPPort,
+		Handler: httpMux,
+	}
+
+	serverErr := make(chan error, 2)
 	go func() {
 		logger.Info("gRPC server listening", "port", cfg.GRPCPort, "app", cfg.AppName)
-		serverErr <- grpcServer.Serve(listener)
+		if err := grpcServer.Serve(listener); err != nil {
+			serverErr <- fmt.Errorf("serve grpc: %w", err)
+		}
+	}()
+
+	go func() {
+		logger.Info("HTTP server listening", "port", cfg.HTTPPort, "app", cfg.AppName)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- fmt.Errorf("serve http: %w", err)
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
 		logger.Info("shutdown signal received")
 		grpcServer.GracefulStop()
-		return nil
-	case err := <-serverErr:
-		if err != nil {
-			return fmt.Errorf("serve grpc: %w", err)
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("shutdown http server: %w", err)
 		}
 		return nil
+	case err := <-serverErr:
+		return err
 	}
 }

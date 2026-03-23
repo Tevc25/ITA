@@ -4,3 +4,8 @@ parkirisca/.env
 parkirisca/data/*.db
 uporabniki/data/*.sqlite-shm
 uporabniki/data/*.sqlite-wal
+rezervacije-parkiranja/.venv/
+rezervacije-parkiranja/.pytest_cache/
+rezervacije-parkiranja/**/__pycache__/
+rezervacije-parkiranja/data/*.db
+rezervacije-parkiranja/.env

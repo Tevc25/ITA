@@ -3,7 +3,7 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 
 import { ApiClient } from "@shared/api";
 import { clearSession, EMPTY_SESSION, loadSession, saveSession } from "@shared/session";
-import type { ParkingLot, SessionState } from "@shared/types";
+import type { ParkingLot, SessionState, SystemServiceStatus } from "@shared/types";
 
 const AuthMfe = lazy(() => import("mfe_auth/App"));
 const ParkingMfe = lazy(() => import("mfe_parking/App"));
@@ -38,6 +38,8 @@ export default function App() {
 
   const [healthy, setHealthy] = useState<boolean | null>(null);
   const [labOutput, setLabOutput] = useState("API lab output appears here.");
+  const [systemServices, setSystemServices] = useState<SystemServiceStatus[] | null>(null);
+  const [systemGeneratedAt, setSystemGeneratedAt] = useState<string | null>(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "/api/web";
   const healthPath = import.meta.env.VITE_HEALTH_PATH || "/health";
@@ -88,6 +90,17 @@ export default function App() {
       setLabOutput(JSON.stringify(me, null, 2));
     } catch (error) {
       setLabOutput(error instanceof Error ? error.message : "Could not fetch /me.");
+    }
+  }
+
+  async function runLabSystemStatus() {
+    try {
+      const result = await api.systemStatus();
+      setSystemServices(result.services);
+      setSystemGeneratedAt(result.generated_at);
+      setLabOutput(JSON.stringify(result, null, 2));
+    } catch (error) {
+      setLabOutput(error instanceof Error ? error.message : "Could not fetch system status.");
     }
   }
 
@@ -226,9 +239,35 @@ export default function App() {
                   <button type="button" onClick={runLabMe}>
                     Check /api/web/me
                   </button>
+                  <button type="button" onClick={runLabSystemStatus}>
+                    Check /api/web/system/status
+                  </button>
                 </div>
 
                 <textarea className="api-lab-output" value={labOutput} readOnly />
+
+                {systemServices ? (
+                  <div className="system-status-panel">
+                    <div className="system-status-head">
+                      <h3>System Status</h3>
+                      {systemGeneratedAt ? <span>Updated: {new Date(systemGeneratedAt).toLocaleString()}</span> : null}
+                    </div>
+
+                    <div className="system-status-grid">
+                      {systemServices.map((item) => (
+                        <article key={item.service} className={`system-status-item ${item.up ? "up" : "down"}`}>
+                          <strong>{item.service}</strong>
+                          <span>{item.up ? "UP" : "DOWN"}</span>
+                          <small>
+                            HTTP: {item.status_code ?? "-"} | Latency: {item.latency_ms ?? "-"} ms
+                          </small>
+                          <small>Circuit: {item.circuit_breaker?.state || "n/a"}</small>
+                          {item.detail ? <small>{item.detail}</small> : null}
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </section>

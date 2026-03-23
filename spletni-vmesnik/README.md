@@ -25,6 +25,7 @@ Frontend uses the existing `gateway-web` REST surface:
 - Auth/users: `/api/web/auth/*`, `/api/web/me`
 - Parking: `/api/web/parking-lots*`
 - Reservations: `/api/web/reservations*`, `/api/web/users/{userId}/reservations`
+- System: `/api/web/system/status`, `/health`
 
 All requests are centralized in `shared/src/api.ts`.
 
@@ -46,7 +47,7 @@ All requests are centralized in `shared/src/api.ts`.
   - `Dashboard` (browse + map + reserve CTA)
   - `Create Parking` (separate page with map picker)
   - `My Reservations`
-  - `API Lab` (advanced testing)
+  - `API Lab` (advanced testing + system health dashboard)
 
 ## Local development
 

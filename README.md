@@ -117,6 +117,11 @@ Spletni odjemalec je implementiran v **React + TypeScript** in razdeljen v več 
 
 Uporabljen je pristop **Module Federation** z jasno ločenimi app mapami.
 
+### Dodatno uvedena vzorca mikroservisne arhitekture
+
+- **Odklopnik (Circuit Breaker)** v `gateway-web`: pri ponavljajočih napakah posamezne storitve gateway začasno prekine klice in vrača `503`, nato po timeoutu preide v half-open režim.
+- **Vmesnik za preverjanje stanja (Health Check API + UI)**: `gateway-web` izpostavi agregiran endpoint `/api/web/system/status`, shell `API Lab` pa prikaže health/circuit stanje vseh ključnih storitev.
+
 ---
 
 ## Zagon celotnega sistema lokalno

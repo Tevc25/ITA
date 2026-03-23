@@ -284,6 +284,71 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+.system-status-panel {
+  margin-top: 10px;
+  border: 1px solid #cbd9ee;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.system-status-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.system-status-head h3 {
+  margin: 0;
+  color: #203d67;
+  font-size: 0.95rem;
+}
+
+.system-status-head span {
+  color: #557397;
+  font-size: 0.78rem;
+}
+
+.system-status-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.system-status-item {
+  border: 1px solid #d5e1f2;
+  border-radius: 10px;
+  padding: 9px;
+  display: grid;
+  gap: 3px;
+}
+
+.system-status-item.up {
+  background: #f5fcf8;
+  border-color: #c6ead7;
+}
+
+.system-status-item.down {
+  background: #fff5f5;
+  border-color: #f0c6c7;
+}
+
+.system-status-item strong {
+  color: #1f3d68;
+}
+
+.system-status-item span {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.system-status-item small {
+  color: #47658a;
+  font-size: 0.74rem;
+}
+
 @media (max-width: 1080px) {
   .auth-layout,
   .shell-content {
@@ -314,5 +379,9 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     width: 100%;
+  }
+
+  .system-status-grid {
+    grid-template-columns: 1fr;
   }
 }

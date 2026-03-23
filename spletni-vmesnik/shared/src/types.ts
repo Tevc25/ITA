@@ -46,3 +46,30 @@ export interface Reservation {
 }
 
 export type ReservationScope = "all" | "active" | "past";
+
+export interface ServiceCircuitBreakerStatus {
+  state: "closed" | "open" | "half_open";
+  failure_count: number;
+  failure_threshold: number;
+  recovery_timeout_seconds: number;
+  opened_at: string | null;
+  retry_after_seconds: number | null;
+}
+
+export interface SystemServiceStatus {
+  service: string;
+  base_url: string;
+  health_path: string;
+  up: boolean;
+  status: string;
+  status_code: number | null;
+  latency_ms: number | null;
+  detail: string | null;
+  circuit_breaker: ServiceCircuitBreakerStatus | null;
+}
+
+export interface SystemStatusResponse {
+  status: "ok" | "degraded" | "down";
+  generated_at: string;
+  services: SystemServiceStatus[];
+}

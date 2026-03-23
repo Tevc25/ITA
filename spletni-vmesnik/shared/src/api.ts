@@ -6,6 +6,7 @@ import type {
   Reservation,
   ReservationScope,
   SessionState,
+  SystemStatusResponse,
   UserProfile,
 } from "./types";
 
@@ -109,6 +110,10 @@ export class ApiClient {
     return this.request<{ status: string; service?: string; client?: string }>(healthPath, {
       useBaseUrl: !(isAbsoluteUrl || isRootRelativePath),
     });
+  }
+
+  async systemStatus(): Promise<SystemStatusResponse> {
+    return this.request<SystemStatusResponse>("/system/status");
   }
 
   async register(input: { email: string; password: string; name: string }): Promise<UserProfile> {

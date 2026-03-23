@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/remote-modules.d.ts","./src/vite-env.d.ts","../shared/src/api.ts","../shared/src/availability.ts","../shared/src/contracts.ts","../shared/src/date.ts","../shared/src/map.ts","../shared/src/session.ts","../shared/src/types.ts"],"version":"5.9.3"}

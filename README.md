@@ -93,7 +93,104 @@ sistem-za-parkirisca/
 ├── gateway-mobile/             # API Gateway za mobile odjemalec (Go)
 │
 ├── spletni-vmesnik/
-│   ├── src/                    # UI logika in komponente
-│   └── public/                 # statične datoteke
+│   ├── shell/                  # host app (React + TS, Module Federation)
+│   ├── mfe-auth/               # auth/users micro frontend
+│   ├── mfe-parking/            # parking + map + parking admin tools MFE
+│   ├── mfe-reservations/       # reservations MFE
+│   ├── shared/                 # shared typed API + utility layer
+│   └── nginx.conf              # reverse proxy do gateway-web
 │
 └── README.md
+```
+
+---
+
+## Frontend (Micro Frontends)
+
+Spletni odjemalec je implementiran v **React + TypeScript** in razdeljen v več MFE aplikacij:
+
+- `shell` (container/host): sestavljanje remote modulov, navigacija, session state
+- `mfe-auth`: registracija + prijava
+- `mfe-parking`: seznam/filtri/sort, mapa (OpenStreetMap + Leaflet), detajli + ločen create-parking view z map pickerjem + update availability/delete za izbran lot
+- `mfe-reservations`: create/get/list/cancel rezervacij brez ročnega vnosa user ID (uporabi prijavljenega uporabnika) in z izbiro parkirišča iz seznama
+- `shared`: enoten tipiziran API klient in skupni tipi/utili
+
+Uporabljen je pristop **Module Federation** z jasno ločenimi app mapami.
+
+---
+
+## Zagon celotnega sistema lokalno
+
+```bash
+docker compose up --build
+```
+
+Po zagonu:
+
+- spletni vmesnik (Micro Frontends shell): `http://localhost:8088`
+- gateway-web (Swagger): `http://localhost:8090/docs`
+- gateway-mobile: `http://localhost:8091`
+- uporabniki: `http://localhost:3000`
+- parkirisca: `http://localhost:8080`
+- rezervacije-parkiranja: `http://localhost:8000`
+
+---
+
+## Frontend lokalni razvoj (brez Docker)
+
+```bash
+cd spletni-vmesnik
+npm run install:all
+npm run dev
+```
+
+Privzeti porti:
+
+- shell: `http://localhost:5173`
+- mfe-auth: `http://localhost:5174`
+- mfe-parking: `http://localhost:5175`
+- mfe-reservations: `http://localhost:5176`
+
+---
+
+## API in map predpostavke
+
+- Frontend kliče backend prek `gateway-web` (`/api/web/...`), brez hardcodanih skrivnosti.
+- Za prikaz markerjev na mapi frontend podpira:
+  - eksplicitne `latitude/longitude` (če jih backend vrne),
+  - geocoding naslova preko OpenStreetMap Nominatim (če `lat/lng` ni podan),
+  - ali `lat,lng` zapis v polju `location`,
+  - sicer determinističen fallback iz `location` besedila (za stabilen prikaz markerjev).
+
+---
+
+## GitHub Actions: gradnja in objava Docker slik
+
+Dodana je pipeline datoteka:
+
+- `.github/workflows/docker-images.yml`
+- `.github/workflows/spletni-vmesnik-ci.yml`
+
+Pipeline:
+
+- ob `pull_request`: naredi validacijski build slik za vse komponente
+- ob `push` na `main` ali `master`: zgradi in objavi slike na DockerHub
+
+Pokrite komponente:
+
+- `parkirisca`
+- `rezervacije-parkiranja`
+- `uporabniki`
+- `gateway-web`
+- `gateway-mobile`
+- `spletni-vmesnik`
+
+Potrebne GitHub Secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+Tagi slik na DockerHub:
+
+- `DOCKERHUB_USERNAME/ita-<komponenta>:latest`
+- `DOCKERHUB_USERNAME/ita-<komponenta>:<git-sha>`

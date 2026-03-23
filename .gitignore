@@ -13,3 +13,6 @@ gateway-web/.venv/
 gateway-web/.pytest_cache/
 gateway-web/**/__pycache__/
 gateway-web/.env
+spletni-vmesnik/.env
+spletni-vmesnik/**/node_modules/
+spletni-vmesnik/**/dist/

@@ -117,6 +117,19 @@ services:
     networks:
       - ita_net
 
+  spletni-vmesnik:
+    build:
+      context: ./spletni-vmesnik
+      dockerfile: Dockerfile
+    container_name: ita-spletni-vmesnik
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    depends_on:
+      - gateway-web
+    networks:
+      - ita_net
+
 volumes:
   uporabniki_data:
   parkirisca_data:

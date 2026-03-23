@@ -1,0 +1,491 @@
+:root {
+  --parking-bg: #f5f8ff;
+  --parking-panel: #ffffff;
+  --parking-border: #d4deef;
+  --parking-text: #15284d;
+  --parking-muted: #587097;
+  --parking-primary: #1f8dff;
+  --parking-primary-2: #0f6ed6;
+  --parking-danger: #e5484d;
+}
+
+.standalone-parking-shell {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eff5ff 0%, #dce8fa 100%);
+  padding: 20px;
+}
+
+.parking-app {
+  display: grid;
+  gap: 14px;
+  color: var(--parking-text);
+}
+
+.parking-toolbar {
+  border: 1px solid var(--parking-border);
+  border-radius: 16px;
+  background: var(--parking-panel);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.parking-toolbar h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.16rem;
+}
+
+.parking-toolbar p {
+  margin: 6px 0 0;
+  color: var(--parking-muted);
+  font-size: 0.92rem;
+}
+
+.parking-geocode-note {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #4f6f99;
+}
+
+.parking-toolbar button,
+.parking-card-actions button,
+.parking-admin-panel button,
+.parking-create-form-card button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(130deg, var(--parking-primary), var(--parking-primary-2));
+  transition: transform 0.2s ease;
+}
+
+.parking-toolbar button:hover,
+.parking-card-actions button:hover,
+.parking-admin-panel button:hover,
+.parking-create-form-card button:hover {
+  transform: translateY(-1px);
+}
+
+.parking-toolbar button:disabled,
+.parking-admin-panel button:disabled,
+.parking-create-form-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.parking-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.parking-filter-grid label {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--parking-border);
+  border-radius: 14px;
+  background: var(--parking-panel);
+  padding: 10px;
+  font-size: 0.85rem;
+  color: var(--parking-muted);
+}
+
+.parking-filter-grid label svg {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.parking-filter-grid input,
+.parking-filter-grid select,
+.parking-admin-panel input,
+.parking-create-form-card input,
+.parking-admin-result {
+  width: 100%;
+  border: 1px solid #c7d5ec;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px;
+  font-size: 0.92rem;
+  color: var(--parking-text);
+}
+
+.parking-error-box {
+  border: 1px solid #f3c2c3;
+  border-radius: 12px;
+  background: #fff2f2;
+  color: #90272d;
+  padding: 11px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.parking-error-box p {
+  margin: 0;
+}
+
+.parking-error-box button {
+  border: 1px solid #d6797c;
+  border-radius: 8px;
+  background: #fff;
+  color: #8f2c30;
+  cursor: pointer;
+  padding: 8px 10px;
+}
+
+.parking-main-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.2fr);
+  gap: 12px;
+}
+
+.parking-list-panel,
+.parking-map-panel,
+.parking-admin-panel {
+  border: 1px solid var(--parking-border);
+  border-radius: 16px;
+  background: var(--parking-panel);
+  padding: 14px;
+}
+
+.parking-list {
+  display: grid;
+  gap: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.parking-card {
+  border: 1px solid #d7e0f0;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.parking-card:hover {
+  border-color: #9ec5f6;
+  transform: translateY(-1px);
+}
+
+.parking-card.selected {
+  border-color: #1f8dff;
+  box-shadow: 0 8px 18px rgba(31, 141, 255, 0.18);
+}
+
+.parking-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.parking-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.parking-location {
+  margin: 8px 0;
+  color: #4c648c;
+  font-size: 0.89rem;
+}
+
+.parking-metrics {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #31507c;
+  font-size: 0.86rem;
+}
+
+.parking-card-actions {
+  margin-top: 10px;
+}
+
+.availability-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.availability-badge.high {
+  background: #def8e8;
+  color: #177c50;
+}
+
+.availability-badge.medium {
+  background: #fff5dc;
+  color: #956700;
+}
+
+.availability-badge.low {
+  background: #ffe5e6;
+  color: #a93134;
+}
+
+.parking-map {
+  width: 100%;
+  min-height: 520px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.parking-create-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.95fr) minmax(340px, 1.2fr);
+  gap: 12px;
+}
+
+.parking-create-form-card,
+.parking-create-map-panel {
+  border: 1px solid var(--parking-border);
+  border-radius: 16px;
+  background: var(--parking-panel);
+  padding: 14px;
+}
+
+.parking-create-form-card h3 {
+  margin: 0 0 10px;
+}
+
+.parking-create-form-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.parking-create-form-card label {
+  font-size: 0.84rem;
+  color: var(--parking-muted);
+}
+
+.parking-create-inline-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.parking-create-inline-grid > div {
+  display: grid;
+  gap: 7px;
+}
+
+.parking-create-message {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.parking-create-message.success {
+  color: #1f8759;
+}
+
+.parking-create-message.error {
+  color: #b43e3f;
+}
+
+.parking-create-map-help {
+  margin-bottom: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #45638d;
+  font-size: 0.86rem;
+}
+
+.map-popup h4 {
+  margin: 0 0 6px;
+}
+
+.map-popup p {
+  margin: 4px 0;
+  font-size: 0.86rem;
+}
+
+.map-popup button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  color: #fff;
+  background: linear-gradient(130deg, #1f8dff, #0f6ed6);
+  cursor: pointer;
+}
+
+.parking-admin-panel h3 {
+  margin: 0 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.parking-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.parking-admin-actions button.danger {
+  background: linear-gradient(130deg, #eb5757, #cb3c3c);
+}
+
+.parking-selected-lot-meta {
+  border: 1px solid #d8e2f1;
+  border-radius: 12px;
+  background: #f7fbff;
+  padding: 10px;
+}
+
+.parking-selected-lot-meta p {
+  margin: 0;
+  color: #456185;
+  font-size: 0.86rem;
+}
+
+.parking-selected-lot-meta p + p {
+  margin-top: 4px;
+}
+
+.parking-selected-lot-meta strong {
+  color: #1f3f67;
+}
+
+.parking-admin-update-form {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.parking-admin-update-form label {
+  color: var(--parking-muted);
+  font-size: 0.82rem;
+}
+
+.parking-manage-message {
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+}
+
+.parking-manage-message.success {
+  color: #1f8759;
+}
+
+.parking-manage-message.error {
+  color: #b43e3f;
+}
+
+.parking-auth-note {
+  margin: 0;
+  color: #5c7190;
+  font-size: 0.85rem;
+}
+
+.parking-empty-state {
+  border: 1px dashed #c4d4ed;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  color: #4f678b;
+}
+
+.parking-empty-state h3 {
+  margin: 0 0 8px;
+}
+
+.parking-empty-state p {
+  margin: 0;
+}
+
+.parking-skeleton-list {
+  display: grid;
+  gap: 10px;
+}
+
+.parking-skeleton-item {
+  border: 1px solid #d8e2f2;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #e9eff9 20%, #d9e4f7 50%, #e9eff9 80%);
+  animation: shimmer 1.2s infinite;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.skeleton-title {
+  height: 14px;
+  width: 65%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -120px 0;
+  }
+  100% {
+    background-position: 120px 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .parking-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .parking-create-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .parking-map {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 980px) {
+  .parking-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .parking-admin-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parking-admin-update-form {
+    width: 100%;
+  }
+
+  .parking-create-inline-grid {
+    grid-template-columns: 1fr;
+  }
+}

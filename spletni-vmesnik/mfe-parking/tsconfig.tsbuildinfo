@@ -1,0 +1,1 @@
+{"root":["./src/exposed.ts","./src/main.tsx","./src/vite-env.d.ts","./src/components/parkingapp.tsx","../shared/src/api.ts","../shared/src/availability.ts","../shared/src/contracts.ts","../shared/src/date.ts","../shared/src/map.ts","../shared/src/session.ts","../shared/src/types.ts"],"version":"5.9.3"}

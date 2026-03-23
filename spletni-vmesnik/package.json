@@ -1,0 +1,13 @@
+{
+  "name": "spletni-vmesnik",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -n shell,auth,parking,reservations \"npm --prefix shell run dev\" \"npm --prefix mfe-auth run dev\" \"npm --prefix mfe-parking run dev\" \"npm --prefix mfe-reservations run dev\"",
+    "install:all": "npm --prefix shell install && npm --prefix mfe-auth install && npm --prefix mfe-parking install && npm --prefix mfe-reservations install",
+    "build": "npm --prefix mfe-auth run build && npm --prefix mfe-parking run build && npm --prefix mfe-reservations run build && npm --prefix shell run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

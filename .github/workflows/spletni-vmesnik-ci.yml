@@ -1,0 +1,54 @@
+name: Spletni Vmesnik CI
+
+on:
+  push:
+    paths:
+      - 'spletni-vmesnik/**'
+      - '.github/workflows/spletni-vmesnik-ci.yml'
+  pull_request:
+    paths:
+      - 'spletni-vmesnik/**'
+      - '.github/workflows/spletni-vmesnik-ci.yml'
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            spletni-vmesnik/shell/package-lock.json
+            spletni-vmesnik/mfe-auth/package-lock.json
+            spletni-vmesnik/mfe-parking/package-lock.json
+            spletni-vmesnik/mfe-reservations/package-lock.json
+
+      - name: Build auth MFE
+        working-directory: spletni-vmesnik/mfe-auth
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build parking MFE
+        working-directory: spletni-vmesnik/mfe-parking
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build reservations MFE
+        working-directory: spletni-vmesnik/mfe-reservations
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build shell app
+        working-directory: spletni-vmesnik/shell
+        run: |
+          npm ci
+          npm run build

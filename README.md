@@ -141,6 +141,66 @@ Po zagonu:
 
 ---
 
+## OpenShift deployment (potrjeno)
+
+Sistem je bil uspešno nameščen na OpenShift projektu `tevec-dev` in preverjen 24. 3. 2026.
+
+### Stanje komponent
+
+Na clusterju tečejo vse ključne komponente:
+
+- `uporabniki`
+- `parkirisca`
+- `rezervacije-parkiranja`
+- `gateway-web`
+- `gateway-mobile`
+- `spletni-vmesnik`
+- `activemq`
+
+Preverba:
+
+```bash
+oc get pods
+oc get route
+```
+
+### Dostopni URL-ji (OpenShift)
+
+- Frontend: `https://spletni-vmesnik-tevec-dev.apps.rm1.0a51.p1.openshiftapps.com`
+- Gateway Web: `https://gateway-web-tevec-dev.apps.rm1.0a51.p1.openshiftapps.com`
+
+Hitri smoke test:
+
+```bash
+curl -k https://gateway-web-tevec-dev.apps.rm1.0a51.p1.openshiftapps.com/health
+curl -k https://spletni-vmesnik-tevec-dev.apps.rm1.0a51.p1.openshiftapps.com/health
+curl -k https://spletni-vmesnik-tevec-dev.apps.rm1.0a51.p1.openshiftapps.com/api/web/system/status
+```
+
+Pri uspešnem stanju `/api/web/system/status` vrne `status: "ok"` in vse storitve označi kot `up: true`.
+
+### Opomba za broker (ActiveMQ)
+
+Za strogi način (rezervacije se ne zaženejo brez brokerja) mora biti nastavljen:
+
+- `BROKER_ENABLED=true`
+- `BROKER_REQUIRED=true`
+- `ACTIVEMQ_HOST=activemq`
+- `ACTIVEMQ_PORT=61613`
+
+V logu storitve `rezervacije-parkiranja` mora biti viden zapis `Connected to ActiveMQ`.
+
+### Opomba za UI prijavo
+
+Če UI kaže `Gateway unreachable` ali `401` po spremembah deploymenta, počisti lokalni session v browserju:
+
+```js
+localStorage.removeItem("ita.smartparking.session");
+location.reload();
+```
+
+---
+
 ## Frontend lokalni razvoj (brez Docker)
 
 ```bash

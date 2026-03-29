@@ -16,3 +16,6 @@ gateway-web/.env
 spletni-vmesnik/.env
 spletni-vmesnik/**/node_modules/
 spletni-vmesnik/**/dist/
+faas-events/node_modules/
+faas-events/.serverless/
+faas-events/.env

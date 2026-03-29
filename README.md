@@ -45,6 +45,23 @@ Sistem je zasnovan po načelih **Clean Architecture** (poslovna logika je neodvi
 
 ---
 
+## Naloga 9: Brezstrežniški zaledni sistem (FaaS)
+
+Za nalogo 9 je dodan ločen serverless projekt v mapi `faas-events/`.
+
+- tehnologija: **Serverless Framework (AWS Lambda)**
+- varnost: **JWT + Lambda authorizer**
+- event tipi: **DynamoDB Stream**, **S3 ObjectCreated**, **SQS**, **schedule/cron**, **HTTP eventi**
+- pokrite funkcionalnosti: auth, parkirišča, rezervacije, datoteke, obveščanje/avtomatizacija
+
+Podrobnosti:
+
+- dokumentacija: `faas-events/README.md`
+- konfiguracija: `faas-events/serverless.yml`
+- Postman kolekcija: `faas-events/postman/FaaS-Events.postman_collection.json`
+
+---
+
 ## Komunikacija med komponentami
 - Odjemalci komunicirajo preko **API prehodov (REST/HTTP)**.
 - `gateway-web` in `gateway-mobile` posredujeta zahtevke do mikrostoritev (`uporabniki`, `parkirisca`, `rezervacije-parkiranja`).
@@ -91,6 +108,7 @@ sistem-za-parkirisca/
 │
 ├── gateway-web/                # API Gateway za web odjemalec (Python/FastAPI)
 ├── gateway-mobile/             # API Gateway za mobile odjemalec (Go)
+├── faas-events/                # Serverless FaaS backend (Naloga 9)
 │
 ├── spletni-vmesnik/
 │   ├── shell/                  # host app (React + TS, Module Federation)

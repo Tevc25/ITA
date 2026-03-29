@@ -1,0 +1,297 @@
+service: faas-events
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-central-1
+  stage: ${opt:stage, 'dev'}
+  logRetentionInDays: 14
+  httpApi:
+    cors: true
+    authorizers:
+      faasAuthorizer:
+        type: request
+        functionName: authorizer
+        identitySource:
+          - $request.header.Authorization
+  environment:
+    STAGE: ${sls:stage}
+    JWT_SECRET: ${env:JWT_SECRET, 'local-dev-secret-change-me'}
+    USERS_TABLE: ${self:service}-${sls:stage}-users
+    PARKING_LOTS_TABLE: ${self:service}-${sls:stage}-parking-lots
+    RESERVATIONS_TABLE: ${self:service}-${sls:stage}-reservations
+    EVIDENCE_BUCKET: ${self:custom.evidenceBucket}
+    NOTIFICATION_QUEUE_URL: ${env:NOTIFICATION_QUEUE_URL, 'local-notifications-queue'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - !GetAtt UsersTable.Arn
+            - !Sub "${UsersTable.Arn}/index/*"
+            - !GetAtt ParkingLotsTable.Arn
+            - !Sub "${ParkingLotsTable.Arn}/index/*"
+            - !GetAtt ReservationsTable.Arn
+            - !Sub "${ReservationsTable.Arn}/index/*"
+        - Effect: Allow
+          Action:
+            - s3:ListBucket
+          Resource:
+            - !Sub "arn:aws:s3:::${self:custom.evidenceBucket}"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource:
+            - !Sub "arn:aws:s3:::${self:custom.evidenceBucket}/*"
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - !GetAtt NotificationQueue.Arn
+
+plugins:
+  - serverless-offline
+
+custom:
+  evidenceBucket: ${self:service}-${sls:stage}-evidence
+  serverless-offline:
+    httpPort: 3010
+    lambdaPort: 3012
+
+package:
+  patterns:
+    - "!**/*.md"
+
+functions:
+  authorizer:
+    handler: src/functions/auth/authorizer.handler
+
+  authRegister:
+    handler: src/functions/auth/register.handler
+    events:
+      - httpApi:
+          path: /auth/register
+          method: post
+
+  authLogin:
+    handler: src/functions/auth/login.handler
+    events:
+      - httpApi:
+          path: /auth/login
+          method: post
+
+  me:
+    handler: src/functions/auth/me.handler
+    events:
+      - httpApi:
+          path: /auth/me
+          method: get
+          authorizer:
+            name: faasAuthorizer
+
+  createParkingLot:
+    handler: src/functions/parking/createParkingLot.handler
+    events:
+      - httpApi:
+          path: /parking
+          method: post
+          authorizer:
+            name: faasAuthorizer
+
+  listParkingLots:
+    handler: src/functions/parking/listParkingLots.handler
+    events:
+      - httpApi:
+          path: /parking
+          method: get
+          authorizer:
+            name: faasAuthorizer
+
+  updateParkingAvailability:
+    handler: src/functions/parking/updateParkingAvailability.handler
+    events:
+      - httpApi:
+          path: /parking/{parkingLotId}/availability
+          method: patch
+          authorizer:
+            name: faasAuthorizer
+
+  createReservation:
+    handler: src/functions/reservations/createReservation.handler
+    events:
+      - httpApi:
+          path: /reservations
+          method: post
+          authorizer:
+            name: faasAuthorizer
+
+  cancelReservation:
+    handler: src/functions/reservations/cancelReservation.handler
+    events:
+      - httpApi:
+          path: /reservations/{reservationId}/cancel
+          method: patch
+          authorizer:
+            name: faasAuthorizer
+
+  listUserReservations:
+    handler: src/functions/reservations/listUserReservations.handler
+    events:
+      - httpApi:
+          path: /reservations/mine
+          method: get
+          authorizer:
+            name: faasAuthorizer
+
+  requestEvidenceUploadUrl:
+    handler: src/functions/storage/requestEvidenceUploadUrl.handler
+    events:
+      - httpApi:
+          path: /reservations/{reservationId}/evidence/upload-url
+          method: post
+          authorizer:
+            name: faasAuthorizer
+
+  onEvidenceUploaded:
+    handler: src/functions/storage/onEvidenceUploaded.handler
+    events:
+      - s3:
+          bucket: ${self:custom.evidenceBucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: reservations/
+
+  onReservationDbChange:
+    handler: src/functions/events/onReservationDbChange.handler
+    environment:
+      NOTIFICATION_QUEUE_URL: !Ref NotificationQueue
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt ReservationsTable.StreamArn
+          startingPosition: LATEST
+          batchSize: 10
+
+  processNotificationQueue:
+    handler: src/functions/events/processNotificationQueue.handler
+    events:
+      - sqs:
+          arn: !GetAtt NotificationQueue.Arn
+          batchSize: 5
+
+  expireReservations:
+    handler: src/functions/events/expireReservations.handler
+    events:
+      - schedule: rate(5 minutes)
+
+  generateDailyReport:
+    handler: src/functions/events/generateDailyReport.handler
+    environment:
+      NOTIFICATION_QUEUE_URL: !Ref NotificationQueue
+    events:
+      - schedule: cron(0 22 * * ? *)
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.USERS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: email-index
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    ParkingLotsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PARKING_LOTS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: parkingLotId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: parkingLotId
+            KeyType: HASH
+
+    ReservationsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.RESERVATIONS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: reservationId
+            AttributeType: S
+          - AttributeName: status
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: reservationId
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: reservationId-index
+            KeySchema:
+              - AttributeName: reservationId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: status-index
+            KeySchema:
+              - AttributeName: status
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    NotificationQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${sls:stage}-notifications
+
+    EvidenceBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.evidenceBucket}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+                - PUT
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              MaxAge: 3000

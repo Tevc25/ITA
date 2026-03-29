@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "FaaS Events",
+    "description": "Postman collection for serverless parking backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test.user@example.com\",\n  \"password\": \"Password123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.token) { pm.collectionVariables.set('token', data.token); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test.user@example.com\",\n  \"password\": \"Password123\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Auth - Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/auth/me"
+      }
+    },
+    {
+      "name": "Parking - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.parkingLotId) { pm.collectionVariables.set('parkingLotId', data.parkingLotId); }"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/parking",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Center Garage\",\n  \"location\": \"Ljubljana center\",\n  \"capacity\": 120,\n  \"availableSpots\": 120\n}"
+        }
+      }
+    },
+    {
+      "name": "Parking - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/parking"
+      }
+    },
+    {
+      "name": "Reservation - Create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.reservation && data.reservation.reservationId) {",
+              "  pm.collectionVariables.set('reservationId', data.reservation.reservationId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/reservations",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"parkingLotId\": \"{{parkingLotId}}\",\n  \"vehiclePlate\": \"LJFAAS001\",\n  \"startTime\": \"2026-03-29T10:00:00.000Z\",\n  \"endTime\": \"2026-03-29T12:00:00.000Z\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Reservation - My List",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/reservations/mine"
+      }
+    },
+    {
+      "name": "Storage - Get Upload URL",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/reservations/{{reservationId}}/evidence/upload-url",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"contentType\": \"image/jpeg\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Reservation - Cancel",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/reservations/{{reservationId}}/cancel"
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3010" },
+    { "key": "token", "value": "" },
+    { "key": "parkingLotId", "value": "" },
+    { "key": "reservationId", "value": "" }
+  ]
+}

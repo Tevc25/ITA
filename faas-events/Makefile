@@ -2,8 +2,9 @@ SLS ?= npx serverless
 STAGE ?= local
 FUNCTION ?= processNotificationQueue
 EVENT ?= event.json
+UI_PORT ?= 4173
 
-.PHONY: install offline deploy remove logs invoke print
+.PHONY: install offline deploy remove logs invoke print ui reset-local
 
 install:
 	npm install
@@ -25,3 +26,9 @@ invoke:
 
 print:
 	$(SLS) print --stage $(STAGE)
+
+ui:
+	cd web-ui && python3 -m http.server $(UI_PORT)
+
+reset-local:
+	rm -f data/local-db.json

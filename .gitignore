@@ -19,3 +19,4 @@ spletni-vmesnik/**/dist/
 faas-events/node_modules/
 faas-events/.serverless/
 faas-events/.env
+faas-events/data/local-db.json

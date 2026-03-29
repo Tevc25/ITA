@@ -63,6 +63,49 @@ make offline STAGE=local
 
 Offline HTTP API: `http://localhost:3010`
 
+Lokalni način (`STAGE=local`) uporablja datoteko `data/local-db.json` kot lokalno bazo,
+zato za osnovne API teste ne potrebuješ AWS credentials.
+
+Ponastavitev lokalne baze:
+
+```bash
+cd faas-events
+make reset-local
+```
+
+## Spletni vmesnik (frontend)
+
+Frontend je v mapi `web-ui/` in uporablja **Vue 3** (CDN varianta, brez build koraka).
+
+Podprte funkcionalnosti:
+
+- registracija in prijava
+- shranjevanje JWT tokena in klic `/auth/me`
+- CRUD tok za parkirišča (create/list/update availability)
+- tok za rezervacije (create/list/cancel)
+- pridobivanje upload URL + upload datoteke na S3
+
+Opomba za lokalni način:
+
+- pri `STAGE=local` upload endpoint avtomatsko preusmeri na lokalni `PUT /reservations/{reservationId}/evidence/local-upload`
+- v `dev/prod` ostane standarden S3 pre-signed upload URL
+
+Zagon frontenda:
+
+```bash
+cd faas-events
+make ui UI_PORT=4173
+```
+
+Nato odpri:
+
+- `http://localhost:4173`
+
+V UI nastavi `Base URL`:
+
+- lokalno: `http://localhost:3010` (`serverless offline`)
+- deploy: tvoj AWS API endpoint
+
 ## Uvedba (deploy)
 
 ```bash

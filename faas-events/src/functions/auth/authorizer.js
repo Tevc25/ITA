@@ -17,7 +17,9 @@ exports.handler = async (event) => {
 
   return {
     isAuthorized: true,
+    principalId: claims.userId,
     context: {
+      principalId: claims.userId,
       userId: claims.userId,
       email: claims.email,
       role: claims.role || "user",

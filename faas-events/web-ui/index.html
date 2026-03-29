@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="sl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FaaS Events UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app" class="page">
+      <header class="hero">
+        <div>
+          <p class="kicker">Naloga 10</p>
+          <h1>FaaS Events Frontend</h1>
+          <p class="subtitle">
+            Vue 3 vmesnik za komunikacijo z brezstrežniškim zaledjem
+            (`auth`, `parking`, `reservations`, `storage`).
+          </p>
+        </div>
+        <div class="status-box" :class="{ ok: isAuthenticated }">
+          <span class="label">Status</span>
+          <strong>{{ isAuthenticated ? 'Prijavljen' : 'Neprijavljen' }}</strong>
+          <small>{{ tokenPreview }}</small>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="card">
+          <h2>Konfiguracija API</h2>
+          <label>
+            Base URL
+            <input v-model.trim="baseUrlInput" placeholder="http://localhost:3010" />
+          </label>
+          <button @click="saveBaseUrl">Shrani Base URL</button>
+          <p class="muted">Aktivni URL: <code>{{ baseUrl }}</code></p>
+        </section>
+
+        <section class="card">
+          <h2>Avtentikacija</h2>
+          <div class="split">
+            <form @submit.prevent="register" class="stack">
+              <h3>Registracija</h3>
+              <input v-model.trim="registerForm.name" placeholder="Ime" required />
+              <input v-model.trim="registerForm.email" type="email" placeholder="Email" required />
+              <input v-model="registerForm.password" type="password" placeholder="Geslo (min 8)" minlength="8" required />
+              <button type="submit">Register</button>
+            </form>
+
+            <form @submit.prevent="login" class="stack">
+              <h3>Prijava</h3>
+              <input v-model.trim="loginForm.email" type="email" placeholder="Email" required />
+              <input v-model="loginForm.password" type="password" placeholder="Geslo" required />
+              <button type="submit">Login</button>
+            </form>
+          </div>
+
+          <div class="actions-row">
+            <button @click="loadMe" :disabled="!isAuthenticated">Naloži /auth/me</button>
+            <button @click="logout" class="ghost">Logout</button>
+          </div>
+
+          <pre v-if="meData" class="json-box">{{ pretty(meData) }}</pre>
+        </section>
+
+        <section class="card">
+          <h2>Parkirišča</h2>
+          <form @submit.prevent="createParkingLot" class="inline-form">
+            <input v-model.trim="parkingCreate.name" placeholder="Ime parkirišča" required />
+            <input v-model.trim="parkingCreate.location" placeholder="Lokacija" required />
+            <input v-model.number="parkingCreate.capacity" type="number" min="1" placeholder="Kapaciteta" required />
+            <input v-model.number="parkingCreate.availableSpots" type="number" min="0" placeholder="Prosta mesta" required />
+            <button type="submit" :disabled="!isAuthenticated">Dodaj</button>
+          </form>
+
+          <div class="actions-row">
+            <button @click="listParkingLots(false)" :disabled="!isAuthenticated">Osveži vsa</button>
+            <button @click="listParkingLots(true)" :disabled="!isAuthenticated">Samo prosta</button>
+          </div>
+
+          <div class="inline-form">
+            <input v-model.trim="parkingUpdate.parkingLotId" placeholder="parkingLotId" />
+            <input v-model.number="parkingUpdate.availableSpots" type="number" min="0" placeholder="nova prosta mesta" />
+            <button @click="updateAvailability" :disabled="!isAuthenticated">Posodobi</button>
+          </div>
+
+          <div class="table-wrap" v-if="parkingLots.length">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Ime</th>
+                  <th>Lokacija</th>
+                  <th>Prosta/Kapaciteta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="lot in parkingLots" :key="lot.parkingLotId">
+                  <td><code>{{ lot.parkingLotId }}</code></td>
+                  <td>{{ lot.name }}</td>
+                  <td>{{ lot.location }}</td>
+                  <td>{{ lot.availableSpots }} / {{ lot.capacity }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Rezervacije</h2>
+
+          <form @submit.prevent="createReservation" class="inline-form">
+            <input v-model.trim="reservationCreate.parkingLotId" placeholder="parkingLotId" required />
+            <input v-model.trim="reservationCreate.vehiclePlate" placeholder="Registrska" required />
+            <input v-model="reservationCreate.startTime" type="datetime-local" required />
+            <input v-model="reservationCreate.endTime" type="datetime-local" required />
+            <button type="submit" :disabled="!isAuthenticated">Ustvari rezervacijo</button>
+          </form>
+
+          <div class="actions-row">
+            <input v-model.trim="reservationStatusFilter" placeholder="status filter (active/cancelled/expired)" />
+            <button @click="listReservations" :disabled="!isAuthenticated">Naloži moje rezervacije</button>
+          </div>
+
+          <div class="actions-row">
+            <input v-model.trim="reservationToCancel" placeholder="reservationId za preklic" />
+            <button @click="cancelReservation" :disabled="!isAuthenticated">Prekliči</button>
+          </div>
+
+          <div class="table-wrap" v-if="reservations.length">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Parking</th>
+                  <th>Status</th>
+                  <th>Vozilo</th>
+                  <th>Od - Do</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in reservations" :key="item.reservationId">
+                  <td><code>{{ item.reservationId }}</code></td>
+                  <td><code>{{ item.parkingLotId }}</code></td>
+                  <td>{{ item.status }}</td>
+                  <td>{{ item.vehiclePlate }}</td>
+                  <td>{{ item.startTime }} → {{ item.endTime }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Storage (Evidence Upload URL)</h2>
+          <div class="inline-form">
+            <input v-model.trim="upload.reservationId" placeholder="reservationId" />
+            <input ref="fileInput" type="file" @change="onFileChange" />
+            <button @click="getUploadUrl" :disabled="!isAuthenticated">Pridobi upload URL</button>
+            <button @click="uploadSelectedFile" :disabled="!isAuthenticated || !upload.uploadUrl || !upload.file">Upload file</button>
+          </div>
+
+          <p class="muted" v-if="upload.objectKey">
+            objectKey: <code>{{ upload.objectKey }}</code>
+          </p>
+          <p class="muted" v-if="upload.uploadUrl">
+            uploadUrl pripravljen ({{ upload.contentType }})
+          </p>
+        </section>
+
+        <section class="card full">
+          <h2>API Log</h2>
+          <div class="logs">
+            <div class="log-row" v-for="entry in logs" :key="entry.id">
+              <span class="time">{{ entry.time }}</span>
+              <span class="tag" :class="entry.type">{{ entry.type }}</span>
+              <span>{{ entry.message }}</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

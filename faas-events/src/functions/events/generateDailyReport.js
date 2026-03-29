@@ -1,5 +1,5 @@
 const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
-const { ddb, ScanCommand } = require("../../common/db");
+const { ddb, ScanCommand, isLocalStage } = require("../../common/db");
 
 const sqs = new SQSClient({});
 const RESERVATIONS_TABLE = process.env.RESERVATIONS_TABLE;
@@ -45,12 +45,16 @@ exports.handler = async () => {
     stats,
   };
 
-  await sqs.send(
-    new SendMessageCommand({
-      QueueUrl: NOTIFICATION_QUEUE_URL,
-      MessageBody: JSON.stringify(reportMessage),
-    }),
-  );
+  if (isLocalStage) {
+    console.log("Local stage: skipping SQS publish", reportMessage);
+  } else {
+    await sqs.send(
+      new SendMessageCommand({
+        QueueUrl: NOTIFICATION_QUEUE_URL,
+        MessageBody: JSON.stringify(reportMessage),
+      }),
+    );
+  }
 
   console.log("Daily reservation report generated", reportMessage);
 

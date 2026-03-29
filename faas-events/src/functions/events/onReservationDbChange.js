@@ -1,5 +1,6 @@
 const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
 const { unmarshall } = require("@aws-sdk/util-dynamodb");
+const { isLocalStage } = require("../../common/db");
 
 const sqs = new SQSClient({});
 const NOTIFICATION_QUEUE_URL = process.env.NOTIFICATION_QUEUE_URL;
@@ -52,12 +53,16 @@ exports.handler = async (event) => {
       payload: mapped.payload,
     };
 
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: NOTIFICATION_QUEUE_URL,
-        MessageBody: JSON.stringify(message),
-      }),
-    );
+    if (isLocalStage) {
+      console.log("Local stage: skipping SQS publish", message);
+    } else {
+      await sqs.send(
+        new SendMessageCommand({
+          QueueUrl: NOTIFICATION_QUEUE_URL,
+          MessageBody: JSON.stringify(message),
+        }),
+      );
+    }
 
     published += 1;
   }

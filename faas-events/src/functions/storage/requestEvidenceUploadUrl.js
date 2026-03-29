@@ -1,6 +1,6 @@
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { ddb, GetCommand } = require("../../common/db");
+const { ddb, GetCommand, isLocalStage } = require("../../common/db");
 const { getUserIdFromEvent, parseBody } = require("../../common/http");
 const { unauthorized, badRequest, notFound, json, serverError } = require("../../common/response");
 
@@ -37,6 +37,19 @@ exports.handler = async (event) => {
     }
 
     const objectKey = `reservations/${reservationId}/${Date.now()}-evidence`;
+
+    if (isLocalStage) {
+      const host = event?.headers?.host || event?.headers?.Host || "localhost:3010";
+      const proto = event?.headers?.["x-forwarded-proto"] || "http";
+      const uploadUrl = `${proto}://${host}/reservations/${reservationId}/evidence/local-upload`;
+
+      return json(200, {
+        uploadUrl,
+        objectKey: `local/${objectKey}`,
+        expiresInSeconds: 900,
+        contentType,
+      });
+    }
 
     const command = new PutObjectCommand({
       Bucket: EVIDENCE_BUCKET,

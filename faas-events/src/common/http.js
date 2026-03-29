@@ -1,3 +1,5 @@
+const { verifyToken } = require("./auth");
+
 function parseBody(event) {
   if (!event || !event.body) {
     return {};
@@ -42,8 +44,22 @@ function getUserIdFromEvent(event) {
     return lambdaContext.userId;
   }
 
+  if (lambdaContext?.principalId) {
+    return lambdaContext.principalId;
+  }
+
+  if (event?.requestContext?.authorizer?.principalId) {
+    return event.requestContext.authorizer.principalId;
+  }
+
   if (event?.requestContext?.authorizer?.userId) {
     return event.requestContext.authorizer.userId;
+  }
+
+  const token = extractBearerToken(event);
+  const claims = token ? verifyToken(token) : null;
+  if (claims?.userId) {
+    return claims.userId;
   }
 
   return null;

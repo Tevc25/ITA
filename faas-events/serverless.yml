@@ -13,6 +13,7 @@ provider:
       faasAuthorizer:
         type: request
         functionName: authorizer
+        enableSimpleResponses: true
         identitySource:
           - $request.header.Authorization
   environment:
@@ -164,6 +165,13 @@ functions:
           method: post
           authorizer:
             name: faasAuthorizer
+
+  uploadEvidenceLocal:
+    handler: src/functions/storage/uploadEvidenceLocal.handler
+    events:
+      - httpApi:
+          path: /reservations/{reservationId}/evidence/local-upload
+          method: put
 
   onEvidenceUploaded:
     handler: src/functions/storage/onEvidenceUploaded.handler
